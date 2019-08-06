@@ -1,0 +1,73 @@
+#----------------python
+
+1 python的匹配url怎样匹配三级域
+2 python怎样进行list数据的去重
+3 python怎样拼接字符串  queryStr = "select articleurl from webcrawlerfilelist where DATE_FORMAT(updatedate,'%Y-%m-%d')='"+articleStoreDir+"' and iscrawler=1"
+
+
+#--------------mybatis
+1 where 条件判断相等
+
+	mybatis 映射文件中，if标签判断字符串相等，两种方式：
+	因为mybatis映射文件，是使用的ognl表达式，所以在判断字符串sex变量是否是字符串Y的时候，
+	<if test="sex=='Y'.toString()">
+	<if test = 'sex== "Y"'>
+
+	注意：
+	不能使用
+	<if test="sex=='Y'">
+	and 1=1
+	</if>
+	因为mybatis会把'Y'解析为字符，java是强类型语言，所以不能这样写。
+
+2 复杂数据的查询
+	<select id="getChannelList" parameterType="java.util.Map" resultMap="BaseResultMap">
+			select id,channelurl,insertDate from channellist where 1=1
+			<if test="whereList != null and whereList.size()!=0">
+				<foreach collection="whereList" item="item" separator="and" open="and">
+					 <choose>
+						 <when test='item.type=="string"'>
+							 ${item.field} like CONCAT('%',#{item.value1},'%')
+						 </when>
+						 <otherwise>
+								 <if test="item.value1.start != null and item.value1.end != null">
+									 DATE_FORMAT(${item.field},'%Y-%m-%d') between #{item.value1.start} and #{item.value1.end}
+								 </if>
+								 <if test="item.value1.start != null and item.value1.end == null">
+									 DATE_FORMAT(${item.field},'%Y-%m-%d') >= #{item.value1.start}
+								 </if>
+								 <if test="item.value1.start == null and item.value1.end != null">
+									  #{item.value1.end} >=DATE_FORMAT(${item.field},'%Y-%m-%d')
+								 </if>
+						 </otherwise>
+					 </choose>
+				</foreach>
+			</if>
+
+			order by insertdate desc
+			<if test="orderList != null and orderList.size()!=0">
+					<foreach collection="orderList" item="item" separator="," open=",">
+						${item.field} = #{item.value}
+					</foreach>
+			</if>
+			limit #{begin},#{pageSize}
+		</select>
+		
+		
+3 if else的条件
+<choose>
+	 <when test='item.type=="string"'>
+		 ${item.field} like CONCAT('%',#{item.value1},'%')
+	 </when>
+	 <otherwise>
+			 <if test="item.value1.start != null and item.value1.end != null">
+				 DATE_FORMAT(${item.field},'%Y-%m-%d') between #{item.value1.start} and #{item.value1.end}
+			 </if>
+			 <if test="item.value1.start != null and item.value1.end == null">
+				 DATE_FORMAT(${item.field},'%Y-%m-%d') >= #{item.value1.start}
+			 </if>
+			 <if test="item.value1.start == null and item.value1.end != null">
+				  #{item.value1.end} >=DATE_FORMAT(${item.field},'%Y-%m-%d')
+			 </if>
+	 </otherwise>
+</choose>
