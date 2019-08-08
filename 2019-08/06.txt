@@ -1,0 +1,11 @@
+GET dns_source_index_20190806/_search
+{
+  "query": {
+    "wildcard": {
+      "content": {
+        "value": "*stumbleupon*"
+      }
+    }
+  }
+}
+如果你在mapping中，content就是一个text字段，没有keyword，且按上述进行查询，上述的查询就是一个精确查询

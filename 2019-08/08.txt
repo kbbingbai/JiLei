@@ -1,0 +1,382 @@
+
+--------------1 查询必须是  readFlag=1且fitFlag=1 且 四个 wildcard必须满足其中之一及以上------------------------
+
+BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+String string = String.valueOf(map.get("keywords")).trim();
+QueryBuilder queryBuilder1 = QueryBuilders.wildcardQuery("content.keyword",  "*"+string+"*" );
+QueryBuilder queryBuilder2 = QueryBuilders.wildcardQuery("url.keyword",  "*"+string+"*" );
+QueryBuilder queryBuilder3 = QueryBuilders.wildcardQuery("title.keyword",  "*"+string +"*");
+QueryBuilder queryBuilder4 = QueryBuilders.wildcardQuery("author.keyword",  "*"+string+"*" );
+QueryBuilder queryBuilder10 = null;
+if (map.get("readFlag")!=null){
+	queryBuilder10 = QueryBuilders.termQuery("readFlag", map.get("readFlag"));
+	boolQueryBuilder.must(queryBuilder10);
+}
+if (map.get("fitFlag")!=null&&("0".equals(""+map.get("fitFlag"))||"1".equals(""+map.get("fitFlag")))){
+	queryBuilder10 = QueryBuilders.termQuery("fitFlag", map.get("fitFlag"));
+	boolQueryBuilder.must(queryBuilder10);
+}
+if(map.get("fitFlag")!=null&&"-1".equals(""+map.get("fitFlag"))){//待确认数量
+	boolQueryBuilder.mustNot(QueryBuilders.existsQuery("fitFlag"));
+}
+
+BoolQueryBuilder shouldBuilder = QueryBuilders.boolQuery();
+shouldBuilder.should(queryBuilder1);
+shouldBuilder.should(queryBuilder2);
+shouldBuilder.should(queryBuilder3);
+shouldBuilder.should(queryBuilder4);
+boolQueryBuilder.must(shouldBuilder);
+		
+		
+GET dnsindex/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "readFlag": {
+              "value": 1,
+              "boost": 1
+            }
+          }
+        },
+        {
+          "term": {
+            "fitFlag": {
+              "value": 1,
+              "boost": 1
+            }
+          }
+        },
+        {
+          "bool": {
+            "should": [
+              {
+                "wildcard": {
+                  "content.keyword": {
+                    "wildcard": "*malware*",
+                    "boost": 1
+                  }
+                }
+              },
+              {
+                "wildcard": {
+                  "url.keyword": {
+                    "wildcard": "*malware*",
+                    "boost": 1
+                  }
+                }
+              },
+              {
+                "wildcard": {
+                  "title.keyword": {
+                    "wildcard": "*malware*",
+                    "boost": 1
+                  }
+                }
+              },
+              {
+                "wildcard": {
+                  "author.keyword": {
+                    "wildcard": "*malware*",
+                    "boost": 1
+                  }
+                }
+              }
+            ],
+            "adjust_pure_negative": true,
+            "boost": 1
+          }
+        }
+      ],
+      "adjust_pure_negative": true,
+      "boost": 1
+    }
+  }
+}
+
+
+
+----------下面的意思是：必须满足 readFlag=1 且 四个 wildcard必须满足其中之一及以上，并且满足fitFlag这个字段不存在 ----------------
+
+
+BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
+QueryBuilder queryBuilder1;
+if (map.get("keywords") != null && !map.get("keywords").equals("")) {
+	List<String> list = (List) map.get("keywords");
+	BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+	for (String s : list) {
+		queryBuilder1 = QueryBuilders.matchQuery("tags.id", s.trim());
+		boolQueryBuilder.should(queryBuilder1);
+	}
+	queryBuilder.must(boolQueryBuilder);
+}if (map.get("url") != null && !map.get("url").equals("")) {
+	String s = String.valueOf(map.get("url")).trim();
+	queryBuilder1 = QueryBuilders.wildcardQuery("url.keyword", "*" + s + "*");
+	queryBuilder.must(queryBuilder1);
+}if (map.get("title") != null && !map.get("title").equals("")) {
+	String s = String.valueOf(map.get("title")).trim();
+	queryBuilder1 = QueryBuilders.wildcardQuery("title.keyword", "*" + s + "*");
+	queryBuilder.must(queryBuilder1);
+}if (map.get("content") != null && !map.get("content").equals("")) {
+	String s = String.valueOf(map.get("content")).trim();
+	queryBuilder1 = QueryBuilders.wildcardQuery("content.keyword", "*" + s + "*");
+	queryBuilder.must(queryBuilder1);
+}if (map.get("author") != null && !map.get("author").equals("")) {
+	String s = String.valueOf(map.get("author")).trim();
+	queryBuilder1 = QueryBuilders.wildcardQuery("author.keyword", "*" + s + "*");
+	queryBuilder.must(queryBuilder1);
+}if (!"".equals(((List) map.get("publicDate")).get(0))||!"".equals(((List) map.get("publicDate")).get(1))) {
+	String start = (String)((List) map.get("publicDate")).get(0);
+	String end = (String)((List) map.get("publicDate")).get(1);
+	if(!"".equals(start)&&!"".equals(end)){
+		queryBuilder1 = QueryBuilders.rangeQuery("publicDate")
+				.from(start).to(end);
+	}else if(""!=start){
+		queryBuilder1 = QueryBuilders.rangeQuery("publicDate")
+				.from(start);
+	}else {
+		queryBuilder1 = QueryBuilders.rangeQuery("publicDate")
+				.to(end);
+	}
+	queryBuilder.must(queryBuilder1);
+
+}if (!"".equals(((List) map.get("matchDate")).get(0))||!"".equals(((List) map.get("matchDate")).get(1))) {
+	String start = (String)((List) map.get("matchDate")).get(0);
+	String end = (String)((List) map.get("matchDate")).get(1);
+	if(!"".equals(start)&&!"".equals(end)){
+		queryBuilder1 = QueryBuilders.rangeQuery("matchDate")
+				.from(start).to(end);
+	}else if(""!=start){
+		queryBuilder1 = QueryBuilders.rangeQuery("matchDate")
+				.from(start);
+	}else {
+		queryBuilder1 = QueryBuilders.rangeQuery("matchDate")
+				.to(end);
+	}
+	queryBuilder.must(queryBuilder1);
+
+}if (!"".equals(((List) map.get("insertDate")).get(0))||!"".equals(((List) map.get("insertDate")).get(1))) {
+	String start = (String)((List) map.get("insertDate")).get(0);
+	String end = (String)((List) map.get("insertDate")).get(1);
+	if(!"".equals(start)&&!"".equals(end)){
+		queryBuilder1 = QueryBuilders.rangeQuery("insertDate")
+				.from(start).to(end);
+	}else if(""!=start){
+		queryBuilder1 = QueryBuilders.rangeQuery("insertDate")
+				.from(start);
+	}else {
+		queryBuilder1 = QueryBuilders.rangeQuery("insertDate")
+				.to(end);
+	}
+	queryBuilder.must(queryBuilder1);
+}if (map.get("readFlag")!=null&&!map.get("readFlag").equals("")) {
+	queryBuilder1 = QueryBuilders.matchQuery("readFlag", map.get("readFlag"));
+	queryBuilder.must(queryBuilder1);
+}if (map.get("fitFlag")!=null&&("0".equals(""+map.get("fitFlag"))||"1".equals(""+map.get("fitFlag")))) {
+	queryBuilder1 = QueryBuilders.matchQuery("fitFlag", map.get("fitFlag"));
+	queryBuilder.must(queryBuilder1);
+}if (map.get("fitFlag")!=null&&"-1".equals(""+map.get("fitFlag"))) {
+	queryBuilder.mustNot(QueryBuilders.existsQuery("fitFlag"));
+}
+
+
+
+
+GET dnsindex/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "readFlag": {
+              "value": 1,
+              "boost": 1
+            }
+          }
+        },
+        {
+          "bool": {
+            "should": [
+              {
+                "wildcard": {
+                  "content.keyword": {
+                    "wildcard": "*Facebook*",
+                    "boost": 1
+                  }
+                }
+              },
+              {
+                "wildcard": {
+                  "url.keyword": {
+                    "wildcard": "*Facebook*",
+                    "boost": 1
+                  }
+                }
+              },
+              {
+                "wildcard": {
+                  "title.keyword": {
+                    "wildcard": "*Facebook*",
+                    "boost": 1
+                  }
+                }
+              },
+              {
+                "wildcard": {
+                  "author.keyword": {
+                    "wildcard": "*Facebook*",
+                    "boost": 1
+                  }
+                }
+              }
+            ],
+            "adjust_pure_negative": true,
+            "boost": 1
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "exists": {
+            "field": "fitFlag",
+            "boost": 1
+          }
+        }
+      ],
+      "adjust_pure_negative": true,
+      "boost": 1
+    }
+  }
+}
+
+
+--------------------------------kibana批量批量删除文档当中的一个字段-----------------------
+POST dnsindex/dnstype/_update_by_query
+{
+  "script":{
+    "source":"ctx._source.remove('fitFlag')",
+    "lang":"painless"  #这个可以有也可以没有，具体作用还没有弄清楚
+  },
+  "query": {
+    "match_all": {}
+  }
+}
+
+
+
+-------------------------------elasticsearch 修改文档立即生效-WriteRequest.RefreshPolicy.IMMEDIATE--------------
+UpdateRequest updateRequest = new UpdateRequest();
+try {
+	updateRequest.index(Dns_index)
+			.type(Dns_type)
+			.id(id)
+			.doc(
+					XContentFactory.jsonBuilder()
+							.startObject()
+							.field("readFlag", readFlag)
+							.endObject()
+			).setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+UpdateResponse response = client.update(updateRequest).get();
+
+
+------------------------------------创建mapping语法--------------------------------
+
+PUT my_index{
+	"settings": {
+		"number_of_shards ": 5,
+		"number_of_replicas": 1
+	},
+	"mappings": {
+		"my_doc": {
+			"properties": {
+				"title": {
+					"type": "text",
+					"normalizer": "my_normalizer"
+				},
+				"name": {
+					"type": "text",
+					"analyzer": "standard",
+					"boost": 2
+				},
+				"age": {
+					"type": "integer"
+				},
+				"created": {
+					"type": "date",
+					"format": "strict_date_optional_time||epoch_millis"
+				}
+			}
+		}
+	}
+}
+
+
+-----------------kibana修改一个文档----------------------------------------------
+	POST /website/blog/1/_update
+	{
+	   "doc" : {
+		  "tags" : [ "testing" ],
+		  "views": 0
+	   }
+	}
+	
+	
+-----------------------elasticsearch----  _reindex-复制索引---------------------
+
+POST _reindex
+{
+  "source": {
+    "index": "my_index_name"
+  },
+  "dest": {
+    "index": "my_index_name_new"
+  }
+}
+
+---------------------elasticsearch ids查询--------------------------------------
+
+GET dns_source_index_20190729/_search
+{
+  "query": {
+    "ids": {
+      "values": ["AWw8moFjJDEsDLQ2nSuU","AWw8moFjJDEsDLQ2nSue"]
+    }
+  }
+}
+
+
+
+
+
+--------------------------------kibana批量批量修改文档当中的一个字段的值-----------------------
+POST dnsindex/dnstype/_update_by_query
+{
+  "script":{
+    "source":"ctx._source.字段=值,
+    "lang":"painless"  #这个可以有也可以没有，具体作用还没有弄清楚
+  },
+  "query": {
+    "match_all": {}
+  }
+}
+
+
+
+------------------------- python 怎样去除标签，取到标签里的内容，并怎样去除空行--------------------------
+ f = open(articledir, "r", encoding="utf-8")
+        articleContent = f.read()
+        soup = BeautifulSoup(articleContent,"html5lib")
+        for child in soup.find_all('html'):
+            [s.extract() for s in soup(["script", "style", "svg"])]  # 去除这些指定的标签，因为对于文章内容来说这些是没有用的
+            finalEsContent += "".join([s for s in soup.get_text().splitlines(True) if s.strip()])
+
+
+
+
+
+
+
+
