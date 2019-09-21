@@ -1,0 +1,66 @@
+
+一：mybatis出现的一个问题
+	<select id="queryRoleByGroup" parameterType="com.match.matchdata.usermanage.model.GroupRole" resultMap="BaseResultMap">
+		SELECT
+			  a._id as id ,a.role_name as roleName,a.description
+		  FROM
+			  role a
+		  LEFT JOIN group_role b ON a._id = b.role_id
+		  LEFT JOIN groups c ON b.group_id = c._id
+		  WHERE
+			  b.group_id = #{groupId}
+	</select>
+	  
+	  当BaseResultMap是这样定义的：
+	  
+	  <resultMap id="BaseResultMap" type="com.match.matchdata.usermanage.model.GroupRole">
+		<result column="_id" jdbcType="VARCHAR" property="id" />
+		<result column="role_id" jdbcType="VARCHAR" property="roleId" />
+		<result column="group_id" jdbcType="VARCHAR" property="groupId" />
+	  </resultMap>
+		  
+	 注意SELECT a._id as id 进行映射的时候，as id 这个id 去进行BaseResultMap 去找这个column='id' 这一项，可是找不到，所以即使在实体类当中有这个
+		字段，也是没有用的，也没有方法进行映射过去。如果想要映射过去 
+		
+	
+	解决的方法一：在BaseResultMap定义映射，如下：
+	<resultMap id="BaseResultMap" type="com.match.matchdata.usermanage.model.GroupRole">
+		<result column="id" jdbcType="VARCHAR" property="id" />
+	</resultMap>
+	
+	
+	解决的方法二：在select当中的resultMap改成resultType,如下的形式
+	
+	<select id="queryRoleByGroup" parameterType="com.match.matchdata.usermanage.model.GroupRole" resultType="com.match.matchdata.usermanage.model.GroupRole">
+		SELECT
+			  a._id as id ,a.role_name as roleName,a.description
+		  FROM
+			  role a
+		  LEFT JOIN group_role b ON a._id = b.role_id
+		  LEFT JOIN groups c ON b.group_id = c._id
+		  WHERE
+			  b.group_id = #{groupId}
+	</select>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		

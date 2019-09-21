@@ -364,7 +364,6 @@ POST dnsindex/dnstype/_update_by_query
 }
 
 
-
 ------------------------- python 怎样去除标签，取到标签里的内容，并怎样去除空行--------------------------
  f = open(articledir, "r", encoding="utf-8")
         articleContent = f.read()
